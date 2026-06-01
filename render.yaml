@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: video-intelligence-api
+    runtime: python
+    plan: starter
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: TRIBE_CACHE_DIR
+        value: /cache/tribe
+      - key: EMB_CACHE_DIR
+        value: /cache/embeddings
+    disk:
+      name: model-cache
+      mountPath: /cache
+      sizeGB: 10
