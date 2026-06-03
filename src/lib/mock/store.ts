@@ -13,16 +13,22 @@ import { gradientThumbnail } from "@/lib/mock/thumbnails";
 
 const DEMO_OWNER = "demo-user";
 
-const SEED_TITLES: ReadonlyArray<[string, string]> = [
-  ["a1f3c9d2-0b7e-4d1a-9c2f-1e6b8a4d7c10", "Product Launch Teaser"],
-  ["b2e4d8a1-7c3f-49b2-8a1d-2f7c9b5e6d21", "Conference Keynote"],
-  ["c3f5e7b0-6d2e-4a93-7b0c-3a8d6c4f5e32", "Travel Vlog — Kyoto"],
-  ["d4a6f6c9-5e1d-4b84-6c9b-4b9e5d3a6f43", "Highlight Reel 2026"],
+const SEED_TITLES: ReadonlyArray<[string, string, string]> = [
+  // ["a1f3c9d2-0b7e-4d1a-9c2f-1e6b8a4d7c10", "Product Launch Teaser"],
+  // ["b2e4d8a1-7c3f-49b2-8a1d-2f7c9b5e6d21", "Conference Keynote"],
+  // ["c3f5e7b0-6d2e-4a93-7b0c-3a8d6c4f5e32", "Travel Vlog — Kyoto"],
+  // ["d4a6f6c9-5e1d-4b84-6c9b-4b9e5d3a6f43", "Highlight Reel 2026"],
+  [
+    "8f3b7d21-6c4a-4e95-a7d2-91b5c8e4f6a3",
+    "VR Game Trailer",
+    "AyUNh764T5K802tdvikJ2h8barDHoP3X17xvWVzeSnQO4msY",
+  ],
 ];
 
 function seedProject(
   id: string,
   title: string,
+  ut_id: string,
   offsetDays: number,
 ): Project {
   const analysis = generateAnalysis(id);
@@ -36,7 +42,7 @@ function seedProject(
     ownerId: DEMO_OWNER,
     title,
     thumbnailUrl: gradientThumbnail(id, title),
-    videoUrl: null,
+    videoUrl: `https://utfs.io/f/${ut_id}`,
     status: "ready",
     durationSeconds: analysis.durationSeconds,
     fileSizeBytes: 18_000_000 + (offsetDays + 1) * 7_400_000,
@@ -53,8 +59,8 @@ const globalForStore = globalThis as unknown as {
 function getStore(): Map<string, Project> {
   if (!globalForStore.__videoProjects) {
     const store = new Map<string, Project>();
-    SEED_TITLES.forEach(([id, title], index) => {
-      store.set(id, seedProject(id, title, index * 6));
+    SEED_TITLES.forEach(([id, title, ut_id], index) => {
+      store.set(id, seedProject(id, title, ut_id, index * 6));
     });
     globalForStore.__videoProjects = store;
   }
