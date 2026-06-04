@@ -5,14 +5,8 @@ import type {
 } from "@/lib/types";
 
 /**
- * Deterministic mock analysis generator.
- *
- * Everything is derived from a string seed (the project id) so that the
- * server and client render identical data — no hydration mismatches, and a
- * given project always looks the same across reloads.
- *
- * Replace `generateAnalysis` with a real call to the embedding service once
- * `EMBEDDING_SERVICE_URL` is wired up (see lib/env.ts).
+ * Deterministic analysis generator used until `EMBEDDING_SERVICE_URL` is wired.
+ * Output is derived from the project id so processing is stable across reloads.
  */
 
 /** Mulberry32 — small, fast, deterministic PRNG. */
@@ -38,7 +32,6 @@ function hashSeed(input: string): number {
 
 const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
 
-/** Build a smooth-ish per-second timeline with a few salience peaks. */
 function buildTimeline(
   rng: () => number,
   durationSeconds: number,
@@ -57,10 +50,13 @@ function buildTimeline(
   for (let t = 0; t <= durationSeconds; t++) {
     const peakScore = peaks.reduce((acc, peak) => {
       const distance = t - peak.center;
-      return acc + peak.height * Math.exp(-(distance * distance) / (2 * peak.width * peak.width));
+      return (
+        acc +
+        peak.height *
+          Math.exp(-(distance * distance) / (2 * peak.width * peak.width))
+      );
     }, 0);
 
-    // Random walks give organic-looking secondary signals.
     energyWalk = clamp01(energyWalk + (rng() - 0.5) * 0.18);
     motionWalk = clamp01(motionWalk + (rng() - 0.5) * 0.22);
 
@@ -75,7 +71,6 @@ function buildTimeline(
   return points;
 }
 
-/** Collapse contiguous high-score regions into labeled highlights. */
 function detectHighlights(timeline: TimelinePoint[]): Highlight[] {
   const threshold = 0.55;
   const labels = [
@@ -122,7 +117,6 @@ function detectHighlights(timeline: TimelinePoint[]): Highlight[] {
     .sort((a, b) => a.start - b.start);
 }
 
-/** Produce a synthetic embedding vector of the requested dimensionality. */
 function buildEmbedding(rng: () => number, dim: number): number[] {
   return Array.from({ length: dim }, () => Number((rng() * 2 - 1).toFixed(4)));
 }
@@ -132,10 +126,6 @@ export interface GenerateAnalysisOptions {
   embeddingDim?: number;
 }
 
-/**
- * Generate a complete, deterministic analysis for a project id.
- * This is the shape the real `POST /api/videos/process` returns.
- */
 export function generateAnalysis(
   projectId: string,
   options: GenerateAnalysisOptions = {},
@@ -164,7 +154,9 @@ export function generateAnalysis(
       averageScore: Number(averageScore.toFixed(3)),
       peakScore: Number(peakScore.toFixed(3)),
       highlightCount: highlights.length,
-      engagementIndex: Number((averageScore * 0.6 + peakScore * 0.4).toFixed(3)),
+      engagementIndex: Number(
+        (averageScore * 0.6 + peakScore * 0.4).toFixed(3),
+      ),
     },
   };
 }

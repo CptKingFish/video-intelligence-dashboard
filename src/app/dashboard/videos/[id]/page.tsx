@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnalysisView } from "@/components/video/analysis-view";
 import { getCurrentUser } from "@/lib/auth";
-import { findProject, getProjectAnalysis } from "@/lib/projects";
+import { findProjectWithAnalysis } from "@/lib/projects";
 
 export default async function VideoPage({
   params,
@@ -14,19 +14,19 @@ export default async function VideoPage({
 }) {
   const { id } = await params;
   const user = await getCurrentUser();
-  const project = await findProject(id);
+  const result = await findProjectWithAnalysis(id);
 
-  if (!project || project.ownerId !== user.id) {
+  if (!result || result.project.ownerId !== user.id) {
     notFound();
   }
 
-  const analysis = await getProjectAnalysis(project);
+  const { project, analysis } = result;
 
   return (
     <div className="flex flex-col gap-6">
       <div>
         <Button variant="ghost" size="sm" asChild className="-ml-2 mb-2">
-          <Link href="/dashboard">
+          <Link href="/dashboard" prefetch={false}>
             <ArrowLeft />
             Back to dashboard
           </Link>

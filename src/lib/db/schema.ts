@@ -39,6 +39,10 @@ export const projects = pgTable("projects", {
   embeddingDim: integer("embedding_dim").notNull().default(0),
   /** Raw embedding vector serialized as JSON (or migrate to pgvector). */
   embedding: text("embedding"),
+  /** Detected highlights serialized as JSON. */
+  highlights: text("highlights"),
+  /** Aggregate stats for summary cards, serialized as JSON. */
+  stats: text("stats"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

@@ -2,38 +2,42 @@ import { NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 
-import type { ApiResponse, Project, VideoAnalysis } from "@/lib/types";
-import { generateAnalysis } from "@/lib/mock/analysis";
-import { gradientThumbnail } from "@/lib/mock/thumbnails";
-import { saveProject } from "@/lib/projects";
+import { generateAnalysis } from "@/lib/analysis/generate";
 import { getCurrentUser } from "@/lib/auth";
+import { embeddingServiceUrl, isNeonEnabled } from "@/lib/env";
+import { saveProjectWithAnalysis } from "@/lib/projects";
+import { gradientThumbnail } from "@/lib/thumbnails";
+import type { ApiResponse, Project, VideoAnalysis } from "@/lib/types";
 
 export const runtime = "nodejs";
 
 /**
  * POST /api/videos/process
  *
- * Accepts video metadata (captured client-side), assigns a UUID, runs the
- * "embedding + timeline" analysis, persists the project, and returns the
- * project together with its analysis.
- *
- * MOCK: the embedding/timeline are generated deterministically here. To go
- * live, forward the uploaded MP4 to `EMBEDDING_SERVICE_URL` and map its
- * response (a `number[]` vector embedding) into the same `VideoAnalysis`
- * shape — the rest of the app is unchanged.
+ * Accepts video metadata (captured client-side), runs analysis, persists to
+ * Neon (+ Timescale for timeline when configured), and returns project + analysis.
  */
 const requestSchema = z.object({
   title: z.string().trim().min(1).max(120),
   durationSeconds: z.number().int().nonnegative().max(60 * 60 * 6).default(0),
   fileSizeBytes: z.number().int().nonnegative().default(0),
-  /** Captured first-frame data URL, or remote URL. */
   thumbnailUrl: z.string().min(1).optional(),
-  /** Client object URL (blob:) for in-session playback, optional. */
   videoUrl: z.string().optional(),
   embeddingDim: z.number().int().min(8).max(4096).default(512),
 });
 
 export async function POST(request: Request): Promise<NextResponse> {
+  if (!isNeonEnabled) {
+    return json(
+      {
+        success: false,
+        error:
+          "DATABASE_URL is not configured. Add your Neon connection string to .env.local.",
+      },
+      503,
+    );
+  }
+
   let payload: unknown;
   try {
     payload = await request.json();
@@ -44,7 +48,10 @@ export async function POST(request: Request): Promise<NextResponse> {
   const parsed = requestSchema.safeParse(payload);
   if (!parsed.success) {
     return json(
-      { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input." },
+      {
+        success: false,
+        error: parsed.error.issues[0]?.message ?? "Invalid input.",
+      },
       422,
     );
   }
@@ -53,10 +60,12 @@ export async function POST(request: Request): Promise<NextResponse> {
   const input = parsed.data;
   const id = uuidv4();
 
-  const analysis: VideoAnalysis = generateAnalysis(id, {
-    durationSeconds: input.durationSeconds || undefined,
-    embeddingDim: input.embeddingDim,
-  });
+  const analysis: VideoAnalysis = embeddingServiceUrl
+    ? await fetchExternalAnalysis(id, input)
+    : generateAnalysis(id, {
+        durationSeconds: input.durationSeconds || undefined,
+        embeddingDim: input.embeddingDim,
+      });
 
   const project: Project = {
     id,
@@ -71,9 +80,42 @@ export async function POST(request: Request): Promise<NextResponse> {
     createdAt: new Date().toISOString(),
   };
 
-  await saveProject(project);
+  try {
+    await saveProjectWithAnalysis(project, analysis);
+  } catch (error) {
+    console.error("[videos/process] failed to persist project", error);
+    return json(
+      {
+        success: false,
+        error:
+          "Failed to save project. Run database migrations (pnpm db:migrate).",
+      },
+      500,
+    );
+  }
 
   return json({ success: true, data: { project, analysis } }, 201);
+}
+
+async function fetchExternalAnalysis(
+  projectId: string,
+  input: z.infer<typeof requestSchema>,
+): Promise<VideoAnalysis> {
+  const response = await fetch(embeddingServiceUrl!, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      projectId,
+      durationSeconds: input.durationSeconds,
+      embeddingDim: input.embeddingDim,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Embedding service returned ${response.status}`);
+  }
+
+  return response.json() as Promise<VideoAnalysis>;
 }
 
 function json<T>(body: ApiResponse<T>, status: number): NextResponse {

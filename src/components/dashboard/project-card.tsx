@@ -19,7 +19,11 @@ const STATUS_VARIANT: Record<
 
 export function ProjectCard({ project }: { project: Project }) {
   return (
-    <Link href={`/dashboard/videos/${project.id}`} className="group">
+    <Link
+      href={`/dashboard/videos/${project.id}`}
+      prefetch={false}
+      className="group"
+    >
       <Card className="overflow-hidden p-0 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg">
         <div className="relative aspect-video overflow-hidden bg-muted">
           {/* Thumbnail is the video's captured first frame (or gradient seed). */}

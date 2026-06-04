@@ -1,5 +1,7 @@
 import { isClerkEnabled } from "@/lib/env";
-import { DEMO_OWNER } from "@/lib/mock/store";
+
+/** Stable owner id when Clerk is not configured (local dev without auth). */
+export const DEMO_OWNER_ID = "demo-user";
 
 /** Minimal user shape the app needs, independent of the auth provider. */
 export interface CurrentUser {
@@ -11,7 +13,7 @@ export interface CurrentUser {
 }
 
 const DEMO_USER: CurrentUser = {
-  id: DEMO_OWNER,
+  id: DEMO_OWNER_ID,
   name: "Demo User",
   email: "demo@videointel.app",
   imageUrl: null,
@@ -21,14 +23,12 @@ const DEMO_USER: CurrentUser = {
 /**
  * Resolve the current user.
  *
- * - When Clerk is configured, reads the real authenticated session.
- * - Otherwise returns a stable demo user so the app is fully usable
- *   without any credentials.
+ * - When Clerk is configured, reads the authenticated session.
+ * - Without Clerk, returns a stable demo user for local development.
  */
 export async function getCurrentUser(): Promise<CurrentUser> {
   if (!isClerkEnabled) return DEMO_USER;
 
-  // Imported lazily so the Clerk SDK is never invoked in demo mode.
   const { currentUser } = await import("@clerk/nextjs/server");
   const user = await currentUser();
   if (!user) return DEMO_USER;

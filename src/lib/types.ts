@@ -33,7 +33,7 @@ export interface Project {
   title: string;
   /** Data-URL or remote URL of the captured first frame. */
   thumbnailUrl: string;
-  /** Playable video URL (object URL in demo mode). */
+  /** Playable video URL (blob/object URL or remote). */
   videoUrl: string | null;
   status: ProcessingStatus;
   durationSeconds: number;

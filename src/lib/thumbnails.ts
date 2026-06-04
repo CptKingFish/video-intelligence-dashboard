@@ -1,10 +1,5 @@
 /**
- * Deterministic gradient poster generator.
- *
- * For real uploads the thumbnail is the captured first frame of the video.
- * For seed/demo projects (which have no real footage) we synthesize an
- * attractive gradient poster as an inline SVG data URL, derived from the id
- * so each project keeps a stable, distinct look.
+ * Deterministic gradient poster for uploads without a captured frame.
  */
 
 const PALETTES: ReadonlyArray<readonly [string, string]> = [
@@ -24,7 +19,7 @@ function pickPalette(seed: string): readonly [string, string] {
   return PALETTES[hash % PALETTES.length];
 }
 
-/** Returns an inline SVG data URL usable directly in `<img src>`. */
+/** Inline SVG data URL usable directly in `<img src>`. */
 export function gradientThumbnail(seed: string, label?: string): string {
   const [from, to] = pickPalette(seed);
   const initials = (label ?? "")

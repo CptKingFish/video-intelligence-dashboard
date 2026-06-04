@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:setup-timescale": "node scripts/setup-timescale.mjs",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {

@@ -93,8 +93,8 @@ export default function LandingPage() {
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
             {isClerkEnabled
-              ? "Secure auth by Clerk · Mock analysis data"
-              : "Running in demo mode · No sign-in required"}
+              ? "Secure auth by Clerk · Projects stored in Neon"
+              : "Running without sign-in · Configure Clerk for production"}
           </p>
         </section>
 

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 
+import { useThrottledValue } from "@/hooks/use-throttled-value";
 import type { Project, VideoAnalysis } from "@/lib/types";
 import { VideoPlayer } from "@/components/video/video-player";
 import { StatCards } from "@/components/video/stat-cards";
@@ -24,6 +25,16 @@ export function AnalysisView({
 }) {
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [currentTime, setCurrentTime] = React.useState(0);
+  /** Charts only need ~4 updates/sec; avoids re-rendering heavy Recharts trees every frame. */
+  const chartTime = useThrottledValue(currentTime, 250);
+  const lastTimeUpdate = React.useRef(0);
+
+  const onTimeUpdate = React.useCallback((t: number) => {
+    const now = performance.now();
+    if (now - lastTimeUpdate.current < 100) return;
+    lastTimeUpdate.current = now;
+    setCurrentTime(t);
+  }, []);
 
   const seekTo = React.useCallback((t: number) => {
     const video = videoRef.current;
@@ -36,25 +47,25 @@ export function AnalysisView({
 
   return (
     <div className="grid gap-6 lg:grid-cols-3">
-      <div className="flex flex-col gap-6 lg:col-span-2">
+      <div className="flex min-w-0 flex-col gap-6 lg:col-span-2">
         <VideoPlayer
           videoRef={videoRef}
           project={project}
           highlights={analysis.highlights}
           duration={analysis.durationSeconds}
-          onTimeUpdate={setCurrentTime}
+          onTimeUpdate={onTimeUpdate}
           onSeek={seekTo}
         />
         <StimulationChart
           timeline={analysis.timeline}
           highlights={analysis.highlights}
-          currentTime={currentTime}
+          currentTime={chartTime}
           onSeek={seekTo}
         />
-        <SignalsChart timeline={analysis.timeline} currentTime={currentTime} />
+        <SignalsChart timeline={analysis.timeline} currentTime={chartTime} />
       </div>
 
-      <div className="flex flex-col gap-6">
+      <div className="flex min-w-0 flex-col gap-6">
         <StatCards analysis={analysis} project={project} />
         <HighlightsList
           highlights={analysis.highlights}

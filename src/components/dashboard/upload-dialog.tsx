@@ -96,7 +96,6 @@ export function UploadDialog({
       setOpen(false);
       // Same-document navigation keeps the blob: URL valid for playback.
       router.push(`/dashboard/videos/${result.data.project.id}`);
-      router.refresh();
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Something went wrong.";
@@ -147,7 +146,7 @@ export function UploadDialog({
             ) : (
               <div className="text-sm">
                 <p className="font-medium">Click to choose an MP4</p>
-                <p className="text-muted-foreground">Processed locally in demo mode</p>
+                <p className="text-muted-foreground">Analysis saved to your database</p>
               </div>
             )}
             <input

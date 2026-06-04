@@ -1,9 +1,5 @@
 /**
- * Centralized feature flags derived from environment variables.
- *
- * The app is designed to run end-to-end on MOCK DATA with zero external
- * credentials. Each integration switches from "demo mode" to "live" only
- * when its corresponding environment variable is present.
+ * Feature flags derived from environment variables.
  *
  * NOTE: `NEXT_PUBLIC_*` vars are inlined at build time and safe on the client.
  * Non-public vars (CLERK_SECRET_KEY, DATABASE_URL, ...) are server-only.
@@ -13,10 +9,10 @@
 export const isClerkEnabled: boolean =
   !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
-/** Neon (relational) is live when a connection string is configured. */
+/** Neon (relational) requires a connection string. */
 export const isNeonEnabled: boolean = !!process.env.DATABASE_URL;
 
-/** TimescaleDB (time-series) is live when a connection string is configured. */
+/** TimescaleDB (time-series) is optional; timeline falls back to Neon. */
 export const isTimescaleEnabled: boolean = !!process.env.TIMESCALE_URL;
 
 /** PostHog analytics is live when a project key is configured. */
@@ -28,6 +24,6 @@ export const posthogConfig = {
   host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com",
 } as const;
 
-/** External embedding/processing service. Falls back to the mock route. */
+/** External embedding/processing service (optional). */
 export const embeddingServiceUrl: string | undefined =
   process.env.EMBEDDING_SERVICE_URL;
