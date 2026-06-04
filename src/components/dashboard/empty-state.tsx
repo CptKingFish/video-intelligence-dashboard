@@ -1,5 +1,6 @@
 import { Film } from "lucide-react";
 
+import { AbTestDialog } from "@/components/dashboard/ab-test-dialog";
 import { UploadDialog } from "@/components/dashboard/upload-dialog";
 
 /**
@@ -16,15 +17,16 @@ export function EmptyState() {
         </div>
       </div>
       <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-        Upload new video!
+        Simulate before you post
       </h1>
       <p className="mt-3 max-w-md text-muted-foreground">
-        You don&apos;t have any projects yet. Drop in an MP4 and we&apos;ll
-        capture the thumbnail, generate its embedding, and chart the moments
-        that matter.
+        Pick a curated TikTok clip, predict platform performance, compare edits
+        with neural A/B testing, and get actionable fix suggestions from the brain
+        model.
       </p>
-      <div className="mt-8">
+      <div className="mt-8 flex flex-wrap justify-center gap-3">
         <UploadDialog />
+        <AbTestDialog />
       </div>
     </div>
   );

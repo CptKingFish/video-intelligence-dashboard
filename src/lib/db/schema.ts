@@ -43,6 +43,10 @@ export const projects = pgTable("projects", {
   highlights: text("highlights"),
   /** Aggregate stats for summary cards, serialized as JSON. */
   stats: text("stats"),
+  /** Viral simulator + edit copilot payloads, serialized as JSON. */
+  insights: text("insights"),
+  /** When set, project was created from a curated sample (not arbitrary upload). */
+  sampleId: text("sample_id"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

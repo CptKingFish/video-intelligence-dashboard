@@ -1,9 +1,11 @@
 import type { ProjectRow, TimelineRow } from "@/lib/db/schema";
+import { buildVideoInsights } from "@/lib/analysis/insights";
 import type {
   Highlight,
   Project,
   TimelinePoint,
   VideoAnalysis,
+  VideoInsights,
 } from "@/lib/types";
 
 export function rowToProject(row: ProjectRow): Project {
@@ -17,6 +19,7 @@ export function rowToProject(row: ProjectRow): Project {
     durationSeconds: row.durationSeconds,
     fileSizeBytes: row.fileSizeBytes,
     embeddingDim: row.embeddingDim,
+    sampleId: row.sampleId,
     createdAt: row.createdAt.toISOString(),
   };
 }
@@ -40,6 +43,9 @@ export function parseStoredAnalysis(
   const embedding = JSON.parse(row.embedding) as number[];
   const highlights = JSON.parse(row.highlights) as Highlight[];
   const stats = JSON.parse(row.stats) as VideoAnalysis["stats"];
+  const insights: VideoInsights = row.insights
+    ? (JSON.parse(row.insights) as VideoInsights)
+    : buildVideoInsights(timeline, row.durationSeconds);
 
   return {
     projectId: project.id,
@@ -49,5 +55,6 @@ export function parseStoredAnalysis(
     timeline,
     highlights,
     stats,
+    insights,
   };
 }

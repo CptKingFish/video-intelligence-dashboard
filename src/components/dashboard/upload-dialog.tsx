@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, UploadCloud } from "lucide-react";
+import { Check, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -16,17 +16,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { captureFirstFrame } from "@/lib/video/capture-frame";
-import { formatBytes } from "@/lib/utils";
-import type { ApiResponse, Project, VideoAnalysis } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import type { ApiResponse, Project, VideoAnalysis, VideoSample } from "@/lib/types";
 
-type Phase = "idle" | "reading" | "processing";
-
-const PHASE_LABEL: Record<Phase, string> = {
-  idle: "",
-  reading: "Reading video & capturing first frame…",
-  processing: "Encoding embedding & scoring timeline…",
-};
+type Phase = "idle" | "processing";
 
 export function UploadDialog({
   trigger,
@@ -36,51 +29,52 @@ export function UploadDialog({
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [phase, setPhase] = React.useState<Phase>("idle");
-  const [file, setFile] = React.useState<File | null>(null);
+  const [samples, setSamples] = React.useState<VideoSample[]>([]);
+  const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [title, setTitle] = React.useState("");
   const [progress, setProgress] = React.useState(0);
-  const inputRef = React.useRef<HTMLInputElement>(null);
 
   const busy = phase !== "idle";
+  const selected = samples.find((s) => s.id === selectedId) ?? null;
+
+  React.useEffect(() => {
+    if (!open) return;
+    void fetch("/api/videos/samples")
+      .then((r) => r.json())
+      .then((body: ApiResponse<{ samples: VideoSample[] }>) => {
+        if (body.success && body.data) setSamples(body.data.samples);
+      })
+      .catch(() => toast.error("Could not load demo videos."));
+  }, [open]);
 
   function reset() {
     setPhase("idle");
-    setFile(null);
+    setSelectedId(null);
     setTitle("");
     setProgress(0);
-    if (inputRef.current) inputRef.current.value = "";
   }
 
-  function onSelect(selected: File | null) {
-    if (!selected) return;
-    if (!selected.type.startsWith("video/")) {
-      toast.error("Please choose a video file (MP4).");
-      return;
-    }
-    setFile(selected);
-    setTitle((current) => current || selected.name.replace(/\.[^.]+$/, ""));
+  function onPick(sample: VideoSample) {
+    setSelectedId(sample.id);
+    setTitle(sample.title);
   }
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (!file || busy) return;
+    if (!selectedId || busy) return;
 
     try {
-      setPhase("reading");
-      setProgress(20);
-      const frame = await captureFirstFrame(file);
-      setProgress(50);
-
       setPhase("processing");
+      setProgress(30);
+
       const response = await fetch("/api/videos/process", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: title.trim() || file.name,
-          durationSeconds: Math.round(frame.durationSeconds),
-          fileSizeBytes: file.size,
-          thumbnailUrl: frame.thumbnailUrl,
-          videoUrl: frame.videoUrl,
+          sampleId: selectedId,
+          title: title.trim() || selected?.title,
+          durationSeconds: selected?.durationSeconds ?? 15,
+          fileSizeBytes: 0,
         }),
       });
       setProgress(85);
@@ -92,9 +86,8 @@ export function UploadDialog({
       }
 
       setProgress(100);
-      toast.success("Video processed — opening analysis.");
+      toast.success("Simulation ready — opening analysis.");
       setOpen(false);
-      // Same-document navigation keeps the blob: URL valid for playback.
       router.push(`/dashboard/videos/${result.data.project.id}`);
     } catch (error) {
       const message =
@@ -117,50 +110,51 @@ export function UploadDialog({
       <DialogTrigger asChild>
         {trigger ?? (
           <Button>
-            <UploadCloud />
-            Upload new video
+            <Sparkles />
+            Simulate a TikTok
           </Button>
         )}
       </DialogTrigger>
 
-      <DialogContent>
+      <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Upload a video</DialogTitle>
+          <DialogTitle>Choose a demo TikTok</DialogTitle>
           <DialogDescription>
-            We capture the first frame as your thumbnail and turn the footage
-            into a vector embedding with a stimulation timeline.
+            Pick one of five curated clips (~10–20s) hosted on UploadThing. Custom
+            uploads are disabled for the hackathon demo.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={onSubmit} className="flex flex-col gap-4">
-          <label
-            htmlFor="video-file"
-            className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed bg-accent/30 px-6 py-10 text-center transition-colors hover:border-primary/50 hover:bg-accent/50"
-          >
-            <UploadCloud className="size-8 text-primary" />
-            {file ? (
-              <div className="text-sm">
-                <p className="font-medium">{file.name}</p>
-                <p className="text-muted-foreground">{formatBytes(file.size)}</p>
-              </div>
-            ) : (
-              <div className="text-sm">
-                <p className="font-medium">Click to choose an MP4</p>
-                <p className="text-muted-foreground">Analysis saved to your database</p>
-              </div>
-            )}
-            <input
-              id="video-file"
-              ref={inputRef}
-              type="file"
-              accept="video/mp4,video/*"
-              className="hidden"
-              disabled={busy}
-              onChange={(e) => onSelect(e.target.files?.[0] ?? null)}
-            />
-          </label>
+          <div className="grid max-h-64 grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2">
+            {samples.map((sample) => {
+              const active = sample.id === selectedId;
+              return (
+                <button
+                  key={sample.id}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => onPick(sample)}
+                  className={cn(
+                    "relative rounded-lg border p-3 text-left text-sm transition-colors",
+                    active
+                      ? "border-primary bg-primary/10"
+                      : "hover:border-primary/40",
+                  )}
+                >
+                  {active && (
+                    <Check className="absolute right-2 top-2 size-4 text-primary" />
+                  )}
+                  <p className="pr-6 font-medium">{sample.title}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {sample.description}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
 
-          {file && (
+          {selected && (
             <div className="flex flex-col gap-1.5">
               <label htmlFor="video-title" className="text-sm font-medium">
                 Project title
@@ -170,7 +164,7 @@ export function UploadDialog({
                 value={title}
                 disabled={busy}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Give your video a name"
+                placeholder="Name this simulation"
               />
             </div>
           )}
@@ -180,13 +174,17 @@ export function UploadDialog({
               <Progress value={progress} />
               <p className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Loader2 className="size-3.5 animate-spin" />
-                {PHASE_LABEL[phase]}
+                Encoding TRIBE embedding & running viral simulator…
               </p>
             </div>
           )}
 
-          <Button type="submit" disabled={!file || busy} className="w-full">
-            {busy ? "Processing…" : "Analyze video"}
+          <Button
+            type="submit"
+            disabled={!selectedId || busy}
+            className="w-full"
+          >
+            {busy ? "Processing…" : "Run brain analysis"}
           </Button>
         </form>
       </DialogContent>

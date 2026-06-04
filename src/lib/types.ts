@@ -40,6 +40,8 @@ export interface Project {
   fileSizeBytes: number;
   /** Dimensionality of the returned embedding vector. */
   embeddingDim: number;
+  /** Curated catalog id when not a custom upload. */
+  sampleId?: string | null;
   createdAt: string;
 }
 
@@ -59,6 +61,86 @@ export interface VideoAnalysis {
     highlightCount: number;
     engagementIndex: number;
   };
+  insights: VideoInsights;
+}
+
+/** Curated demo clip from GET /api/videos/samples. */
+export interface VideoSample {
+  id: string;
+  title: string;
+  description: string;
+  videoUrl: string;
+  durationSeconds: number;
+  tags: string[];
+}
+
+export type PlatformId = "tiktok" | "instagram_reels" | "youtube_shorts";
+
+export interface PlatformRating {
+  platform: PlatformId;
+  label: string;
+  stars: number;
+  score: number;
+}
+
+export interface DropOffBucket {
+  range: string;
+  dropOffPercent: number;
+}
+
+export interface AudienceSegment {
+  label: string;
+  response: "low" | "medium" | "high" | "very_high";
+}
+
+export interface ViralSimulator {
+  brainResponseScore: number;
+  platforms: PlatformRating[];
+  dropOff: DropOffBucket[];
+  audiences: AudienceSegment[];
+  signals: {
+    engagementScore: number;
+    motionScore: number;
+    sceneChangeScore: number;
+    hookScore: number;
+  };
+}
+
+export interface EditSuggestion {
+  action: string;
+}
+
+export interface EditCopilotSegment {
+  start: number;
+  end: number;
+  problem: string;
+  suggestions: EditSuggestion[];
+  alternativeHook?: string;
+  suggestedBroll?: string[];
+}
+
+export interface EditCopilot {
+  weakSegments: EditCopilotSegment[];
+}
+
+export interface AbTestCandidate {
+  sampleId: string;
+  title: string;
+  score: number;
+}
+
+export interface AbTestResult {
+  winnerSampleId: string;
+  winnerTitle: string;
+  confidencePercent: number;
+  reason: string;
+  candidates: AbTestCandidate[];
+}
+
+/** Prediction + copilot outputs derived from TRIBE-style timeline heuristics. */
+export interface VideoInsights {
+  viralSimulator: ViralSimulator;
+  editCopilot: EditCopilot;
 }
 
 /** Consistent API envelope (see global patterns). */

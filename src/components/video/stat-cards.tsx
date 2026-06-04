@@ -13,11 +13,13 @@ export function StatCards({
   analysis: VideoAnalysis;
   project: Project;
 }) {
+  const brain = analysis.insights.viralSimulator.brainResponseScore;
+
   const items = [
     {
       icon: Gauge,
-      label: "Engagement index",
-      value: pct(analysis.stats.engagementIndex),
+      label: "Brain response",
+      value: `${brain}/100`,
       tint: "text-primary",
     },
     {

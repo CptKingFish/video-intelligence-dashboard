@@ -78,6 +78,8 @@ export async function insertProjectWithAnalysis(
     embedding: JSON.stringify(analysis.embedding),
     highlights: JSON.stringify(analysis.highlights),
     stats: JSON.stringify(analysis.stats),
+    insights: JSON.stringify(analysis.insights),
+    sampleId: project.sampleId ?? null,
     createdAt: new Date(project.createdAt),
   });
 

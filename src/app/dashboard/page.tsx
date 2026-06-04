@@ -1,5 +1,6 @@
 import { ProjectCard } from "@/components/dashboard/project-card";
 import { EmptyState } from "@/components/dashboard/empty-state";
+import { AbTestDialog } from "@/components/dashboard/ab-test-dialog";
 import { UploadDialog } from "@/components/dashboard/upload-dialog";
 import { getCurrentUser } from "@/lib/auth";
 import { getProjects } from "@/lib/projects";
@@ -22,7 +23,10 @@ export default async function DashboardPage() {
             analyzed and ready to explore
           </p>
         </div>
-        <UploadDialog />
+        <div className="flex flex-wrap gap-2">
+          <UploadDialog />
+          <AbTestDialog />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">

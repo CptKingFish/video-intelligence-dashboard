@@ -1,3 +1,4 @@
+import { buildVideoInsights } from "@/lib/analysis/insights";
 import type {
   Highlight,
   TimelinePoint,
@@ -143,6 +144,8 @@ export function generateAnalysis(
     timeline.reduce((acc, p) => acc + p.score, 0) / timeline.length;
   const peakScore = timeline.reduce((acc, p) => Math.max(acc, p.score), 0);
 
+  const insights = buildVideoInsights(timeline, durationSeconds);
+
   return {
     projectId,
     embedding,
@@ -158,5 +161,6 @@ export function generateAnalysis(
         (averageScore * 0.6 + peakScore * 0.4).toFixed(3),
       ),
     },
+    insights,
   };
 }

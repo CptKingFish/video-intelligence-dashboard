@@ -10,6 +10,8 @@ import { StimulationChart } from "@/components/video/stimulation-chart";
 import { SignalsChart } from "@/components/video/signals-chart";
 import { EmbeddingFingerprint } from "@/components/video/embedding-fingerprint";
 import { HighlightsList } from "@/components/video/highlights-list";
+import { ViralSimulatorCard } from "@/components/video/viral-simulator-card";
+import { EditCopilotCard } from "@/components/video/edit-copilot-card";
 
 /**
  * Client orchestrator for a single video's analysis. Owns the shared
@@ -66,6 +68,11 @@ export function AnalysisView({
       </div>
 
       <div className="flex min-w-0 flex-col gap-6">
+        <ViralSimulatorCard simulator={analysis.insights.viralSimulator} />
+        <EditCopilotCard
+          copilot={analysis.insights.editCopilot}
+          onSeek={seekTo}
+        />
         <StatCards analysis={analysis} project={project} />
         <HighlightsList
           highlights={analysis.highlights}
