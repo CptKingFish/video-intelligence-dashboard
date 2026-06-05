@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 
 import "./globals.css";
+import { BRAND } from "@/lib/brand";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { PostHogProvider } from "@/components/providers/posthog-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -19,9 +20,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VideoIntel — Video Intelligence Dashboard",
-  description:
-    "Upload a video and instantly surface its most stimulating moments with embedding-powered analysis and timeline insights.",
+  title: `${BRAND.name} — Neural Video Intelligence`,
+  description: BRAND.shortDescription,
 };
 
 export default function RootLayout({

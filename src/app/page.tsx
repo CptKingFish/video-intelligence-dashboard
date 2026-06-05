@@ -2,48 +2,50 @@ import Link from "next/link";
 import {
   Activity,
   BarChart3,
+  BrainCircuit,
   Clapperboard,
-  Gauge,
+  FlaskConical,
   Sparkles,
   Workflow,
-  Zap,
 } from "lucide-react";
 
+import { IntelliralLogo } from "@/components/brand/intelliral-logo";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AuthButtons } from "@/components/landing/auth-buttons";
+import { BRAND } from "@/lib/brand";
 import { isClerkEnabled } from "@/lib/env";
 
 const FEATURES = [
   {
-    icon: Sparkles,
-    title: "Embedding-powered analysis",
-    body: "Every upload is encoded into a high-dimensional vector embedding that captures the semantic shape of your footage.",
+    icon: BrainCircuit,
+    title: "TRIBE brain analysis",
+    body: "Every clip is scored second-by-second for neural stimulation — see exactly where viewers lean in or drop off.",
   },
   {
     icon: Activity,
     title: "Stimulation timeline",
-    body: "A per-second salience score pinpoints the exact moments your audience leans in — no scrubbing required.",
+    body: "Per-second salience curves pinpoint peak moments without scrubbing through raw footage.",
+  },
+  {
+    icon: FlaskConical,
+    title: "Neural A/B testing",
+    body: "Compare 2–3 TikTok edits side-by-side and let Intelliral predict the winner before you publish.",
   },
   {
     icon: BarChart3,
-    title: "Beautiful, useful graphs",
-    body: "Engagement curves, energy vs. motion overlays, and an embedding fingerprint, all rendered in real time.",
+    title: "Viral simulator",
+    body: "Platform ratings, audience segments, and drop-off predictions — all from one neural pass.",
   },
   {
     icon: Clapperboard,
-    title: "Auto thumbnails",
-    body: "We capture the video's first frame on the client and generate a unique UUID-keyed project automatically.",
-  },
-  {
-    icon: Gauge,
-    title: "Production-ready stack",
-    body: "Next.js App Router, Clerk auth, Neon + TimescaleDB, PostHog analytics, and Docker — wired and waiting.",
+    title: "Real video thumbnails",
+    body: "Intelliral captures actual frames from your clips so your library looks like a native TikTok feed.",
   },
   {
     icon: Workflow,
-    title: "Built to scale",
-    body: "Relational metadata in Neon, time-series at home in a Timescale hypertable, decoupled from processing.",
+    title: "Production-ready stack",
+    body: "Next.js, Clerk auth, Neon + TimescaleDB, and PostHog analytics — wired and waiting.",
   },
 ] as const;
 
@@ -58,11 +60,8 @@ export default function LandingPage() {
 
       {/* Nav */}
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5">
-        <Link href="/" className="flex items-center gap-2 font-semibold">
-          <span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
-            <Zap className="size-4" />
-          </span>
-          VideoIntel
+        <Link href="/">
+          <IntelliralLogo />
         </Link>
         <div className="flex items-center gap-2">
           <ThemeToggle />
@@ -75,18 +74,16 @@ export default function LandingPage() {
         <section className="flex flex-col items-center pt-16 pb-20 text-center sm:pt-24">
           <Badge variant="outline" className="mb-6 gap-1.5 py-1">
             <Sparkles className="size-3.5 text-primary" />
-            Video intelligence, instantly
+            {BRAND.tagline}
           </Badge>
           <h1 className="max-w-3xl text-balance text-4xl font-bold tracking-tight sm:text-6xl">
-            Find the moments that{" "}
-            <span className="bg-gradient-to-r from-primary to-fuchsia-500 bg-clip-text text-transparent">
-              make people watch
+            Know how your TikTok will perform{" "}
+            <span className="bg-gradient-to-r from-primary via-fuchsia-500 to-cyan-400 bg-clip-text text-transparent">
+              before you post
             </span>
           </h1>
           <p className="mt-6 max-w-xl text-pretty text-lg text-muted-foreground">
-            Upload a video and VideoIntel turns it into a vector embedding,
-            scores every second for stimulation, and surfaces your highlights
-            with graphs that actually mean something.
+            {BRAND.shortDescription}
           </p>
           <div className="mt-9">
             <AuthButtons clerkEnabled={isClerkEnabled} size="lg" />
@@ -117,7 +114,7 @@ export default function LandingPage() {
 
       <footer className="mx-auto w-full max-w-6xl px-6 py-8 text-sm text-muted-foreground">
         <div className="flex flex-col items-center justify-between gap-2 border-t pt-6 sm:flex-row">
-          <span>© 2026 VideoIntel. Built with Next.js.</span>
+          <span>© 2026 {BRAND.name}. Built with Next.js.</span>
           <span>Next.js · Clerk · Neon · TimescaleDB · PostHog</span>
         </div>
       </footer>

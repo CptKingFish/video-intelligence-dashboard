@@ -1,0 +1,115 @@
+{
+  "uploadthingKey": "tquDckWYIgn042q4JUPLuBq0SKUnC3iH7phDl6ZNetgXvzPc",
+  "id": "a1000003-0003-4003-8003-000000000003",
+  "title": "Rec Room Combat Peak",
+  "durationSeconds": 15.5,
+  "analysis": {
+    "stimulation_timeline": [
+      { "score": 72, "timestamp": "0:00" },
+      { "score": 68, "timestamp": "0:00" },
+      { "score": 64, "timestamp": "0:01" },
+      { "score": 61, "timestamp": "0:01" },
+      { "score": 57, "timestamp": "0:02" },
+      { "score": 55, "timestamp": "0:02" },
+      { "score": 53, "timestamp": "0:03" },
+      { "score": 51, "timestamp": "0:03" },
+      { "score": 88, "timestamp": "0:04" },
+      { "score": 85, "timestamp": "0:04" },
+      { "score": 80, "timestamp": "0:05" },
+      { "score": 78, "timestamp": "0:05" },
+      { "score": 82, "timestamp": "0:06" },
+      { "score": 83, "timestamp": "0:06" },
+      { "score": 79, "timestamp": "0:07" },
+      { "score": 76, "timestamp": "0:07" },
+      { "score": 84, "timestamp": "0:08" },
+      { "score": 80, "timestamp": "0:08" },
+      { "score": 74, "timestamp": "0:09" },
+      { "score": 71, "timestamp": "0:09" },
+      { "score": 73, "timestamp": "0:10" },
+      { "score": 70, "timestamp": "0:10" },
+      { "score": 78, "timestamp": "0:11" },
+      { "score": 80, "timestamp": "0:11" },
+      { "score": 84, "timestamp": "0:12" },
+      { "score": 87, "timestamp": "0:12" },
+      { "score": 89, "timestamp": "0:13" },
+      { "score": 91, "timestamp": "0:13" },
+      { "score": 90, "timestamp": "0:14" },
+      { "score": 88, "timestamp": "0:14" },
+      { "score": 93, "timestamp": "0:15" },
+      { "score": 96, "timestamp": "0:15" }
+    ],
+    "brain_response_score": 76,
+    "predicted_drop_off": ["0:02", "0:03", "0:09"],
+    "audience_segment": "Rec Room players, VR gaming community, Gen Z & younger social gaming fans (13–25)",
+    "mean_stimulation": 77,
+    "peak_stimulation": 96,
+    "highlights": 5,
+    "stimulating_moment": {
+      "event": "Close-up duo combat with 4 paint guns airborne simultaneously — maximum visual chaos, action density, and social energy converging",
+      "timestamp": "0:15"
+    },
+    "suggested_edits": [
+      {
+        "title": "UI Drag at Open (0:00–0:03)",
+        "time": "0:00",
+        "suggestions": [
+          "Cut the in-game notification pan from 8 seconds down to 2 — show the 'Get Fooled!' message once, react, move on",
+          "Open with a 1-second flash of the peak combat moment before cutting back to the reveal, creating immediate intrigue"
+        ],
+        "alternatives": "Lead with the aerial flyover shot as the cold open, then cut to the 'Get Fooled!' UI as the punchline — reverses the energy curve from flat-to-high into high-to-payoff"
+      },
+      {
+        "title": "Lounge Segment Too Long (0:09–0:10)",
+        "time": "0:09",
+        "suggestions": [
+          "Trim the lounge/hub ambient panning by half — keep one establishing shot, not three",
+          "Insert a beat-synced cut directly to the outdoor combat at 0:11 to keep momentum from the merch booth energy"
+        ],
+        "alternatives": "Use the lounge scene as a 0.5s transitional flash rather than a held scene — preserves the world-building signal without the engagement dip"
+      },
+      {
+        "title": "No CTA or Title Card at End",
+        "time": "0:15",
+        "suggestions": [
+          "Add a final branded freeze-frame with 'Rec Room — Free to Play' text overlay on the peak combat shot",
+          "End with a call-to-action or follow prompt overlaid on the last frame — the video currently ends on action with no anchor"
+        ],
+        "alternatives": "Loop the aerial flyover shot as a 1s outro bumper after the combat peak — brings it back to the world scale and lands the brand promise before exit"
+      }
+    ]
+  },
+  "projections": [
+    { "timestep": 1, "timeSec": 0.0, "stimProjection": 0.9017, "cosineToStim": 0.6234 },
+    { "timestep": 2, "timeSec": 0.5, "stimProjection": 0.8459, "cosineToStim": 0.6089 },
+    { "timestep": 3, "timeSec": 1.0, "stimProjection": 0.7974, "cosineToStim": 0.5876 },
+    { "timestep": 4, "timeSec": 1.5, "stimProjection": 0.7757, "cosineToStim": 0.5799 },
+    { "timestep": 5, "timeSec": 2.0, "stimProjection": 0.6956, "cosineToStim": 0.5398 },
+    { "timestep": 6, "timeSec": 2.5, "stimProjection": 0.6739, "cosineToStim": 0.5303 },
+    { "timestep": 7, "timeSec": 3.0, "stimProjection": 0.6434, "cosineToStim": 0.5161 },
+    { "timestep": 8, "timeSec": 3.5, "stimProjection": 0.6172, "cosineToStim": 0.5031 },
+    { "timestep": 9, "timeSec": 4.0, "stimProjection": 1.5122, "cosineToStim": 0.9351 },
+    { "timestep": 10, "timeSec": 4.5, "stimProjection": 1.4805, "cosineToStim": 0.9432 },
+    { "timestep": 11, "timeSec": 5.0, "stimProjection": 1.3973, "cosineToStim": 0.8369 },
+    { "timestep": 12, "timeSec": 5.5, "stimProjection": 1.3609, "cosineToStim": 0.8277 },
+    { "timestep": 13, "timeSec": 6.0, "stimProjection": 1.5789, "cosineToStim": 0.9693 },
+    { "timestep": 14, "timeSec": 6.5, "stimProjection": 1.5804, "cosineToStim": 0.975 },
+    { "timestep": 15, "timeSec": 7.0, "stimProjection": 1.5176, "cosineToStim": 0.9715 },
+    { "timestep": 16, "timeSec": 7.5, "stimProjection": 1.4592, "cosineToStim": 0.9688 },
+    { "timestep": 17, "timeSec": 8.0, "stimProjection": 1.6478, "cosineToStim": 0.9795 },
+    { "timestep": 18, "timeSec": 8.5, "stimProjection": 1.5892, "cosineToStim": 0.9744 },
+    { "timestep": 19, "timeSec": 9.0, "stimProjection": 1.4467, "cosineToStim": 0.9795 },
+    { "timestep": 20, "timeSec": 9.5, "stimProjection": 1.3843, "cosineToStim": 0.9773 },
+    { "timestep": 21, "timeSec": 10.0, "stimProjection": 1.4267, "cosineToStim": 0.9869 },
+    { "timestep": 22, "timeSec": 10.5, "stimProjection": 1.3687, "cosineToStim": 0.9863 },
+    { "timestep": 23, "timeSec": 11.0, "stimProjection": 1.612, "cosineToStim": 0.9972 },
+    { "timestep": 24, "timeSec": 11.5, "stimProjection": 1.6703, "cosineToStim": 0.9975 },
+    { "timestep": 25, "timeSec": 12.0, "stimProjection": 1.7655, "cosineToStim": 0.999 },
+    { "timestep": 26, "timeSec": 12.5, "stimProjection": 1.8422, "cosineToStim": 0.9993 },
+    { "timestep": 27, "timeSec": 13.0, "stimProjection": 1.883, "cosineToStim": 0.9996 },
+    { "timestep": 28, "timeSec": 13.5, "stimProjection": 1.9552, "cosineToStim": 0.9996 },
+    { "timestep": 29, "timeSec": 14.0, "stimProjection": 1.9414, "cosineToStim": 0.9999 },
+    { "timestep": 30, "timeSec": 14.5, "stimProjection": 1.9143, "cosineToStim": 0.9998 },
+    { "timestep": 31, "timeSec": 15.0, "stimProjection": 2.0223, "cosineToStim": 1.0 },
+    { "timestep": 32, "timeSec": 15.5, "stimProjection": 2.0715, "cosineToStim": 1.0 }
+  ]
+}

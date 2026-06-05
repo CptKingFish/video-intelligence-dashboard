@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design tokens for the Video Intelligence Dashboard.
+ * Design tokens for Intelliral.
  * Dark-first, professional palette with a violet/indigo accent.
  * Consumed by shadcn-style components via the @theme inline block below.
  */

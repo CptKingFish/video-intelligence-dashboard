@@ -1,68 +1,67 @@
 import {
   doublePrecision,
   integer,
+  jsonb,
   pgTable,
   real,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+
+import type { VideoAnalysisSchema } from "@/lib/types";
 
 /**
  * Drizzle schema.
  *
  * Two logical databases share these definitions:
- *  - NEON (relational): `projects` — one row per uploaded video + metadata.
- *  - TIMESCALEDB (time-series): `timeline_points` — promoted to a hypertable
- *    on `t` for efficient per-second range scans. The embedding vector itself
- *    is stored as JSON text on the project row (swap to pgvector if you add
- *    similarity search).
+ *  - NEON (relational): `projects` — one row per uploadthing video + analysis JSON.
+ *  - TIMESCALEDB (time-series): `stim_projections` — hypertable on `timestep`.
  *
- * Run migrations with `npm run db:generate && npm run db:migrate`.
- * After the first Timescale migration, create the hypertable (see the SQL in
- * `drizzle/timescale-hypertable.sql` / README).
+ * Run migrations with `pnpm db:generate && pnpm db:migrate`.
+ * After the first Timescale migration, run `pnpm db:setup-timescale`.
  */
 
-export const projects = pgTable("projects", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  ownerId: text("owner_id").notNull(),
-  title: text("title").notNull(),
-  thumbnailUrl: text("thumbnail_url").notNull(),
-  videoUrl: text("video_url"),
-  status: text("status", {
-    enum: ["queued", "processing", "ready", "failed"],
-  })
-    .notNull()
-    .default("queued"),
-  durationSeconds: integer("duration_seconds").notNull().default(0),
-  fileSizeBytes: integer("file_size_bytes").notNull().default(0),
-  embeddingDim: integer("embedding_dim").notNull().default(0),
-  /** Raw embedding vector serialized as JSON (or migrate to pgvector). */
-  embedding: text("embedding"),
-  /** Detected highlights serialized as JSON. */
-  highlights: text("highlights"),
-  /** Aggregate stats for summary cards, serialized as JSON. */
-  stats: text("stats"),
-  /** Viral simulator + edit copilot payloads, serialized as JSON. */
-  insights: text("insights"),
-  /** When set, project was created from a curated sample (not arbitrary upload). */
-  sampleId: text("sample_id"),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const projects = pgTable(
+  "projects",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** UploadThing file key — canonical analysis keyed per owner. */
+    uploadthingKey: text("uploadthing_key").notNull(),
+    ownerId: text("owner_id").notNull(),
+    title: text("title").notNull(),
+    thumbnailUrl: text("thumbnail_url").notNull(),
+    videoUrl: text("video_url"),
+    status: text("status", {
+      enum: ["queued", "processing", "ready", "failed"],
+    })
+      .notNull()
+      .default("queued"),
+    durationSeconds: real("duration_seconds").notNull().default(0),
+    /** TRIBE v2 analysis schema (stimulation_timeline, suggested_edits, etc.). */
+    analysis: jsonb("analysis").$type<VideoAnalysisSchema>().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("projects_owner_uploadthing_key_idx").on(
+      table.ownerId,
+      table.uploadthingKey,
+    ),
+  ],
+);
 
-/** Time-series rows — becomes a TimescaleDB hypertable on `t`. */
-export const timelinePoints = pgTable("timeline_points", {
+/** Time-series rows — becomes a TimescaleDB hypertable on `time_sec`. */
+export const stimProjections = pgTable("stim_projections", {
   projectId: uuid("project_id").notNull(),
-  /** Seconds from the start of the video. */
-  t: integer("t").notNull(),
-  score: real("score").notNull(),
-  energy: real("energy").notNull(),
-  motion: real("motion").notNull(),
-  recordedAt: doublePrecision("recorded_at").notNull(),
+  timestep: integer("timestep").notNull(),
+  timeSec: doublePrecision("time_sec").notNull(),
+  stimProjection: real("stim_projection").notNull(),
+  cosineToStim: real("cosine_to_stim").notNull(),
 });
 
 export type ProjectRow = typeof projects.$inferSelect;
 export type NewProjectRow = typeof projects.$inferInsert;
-export type TimelineRow = typeof timelinePoints.$inferSelect;
+export type StimProjectionRow = typeof stimProjections.$inferSelect;

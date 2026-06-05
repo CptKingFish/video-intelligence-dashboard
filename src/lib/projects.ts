@@ -3,7 +3,12 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 
 import * as repository from "@/lib/db/repository";
-import type { Project, VideoAnalysis } from "@/lib/types";
+import type {
+  Project,
+  StimProjectionPoint,
+  VideoAnalysis,
+  VideoAnalysisSchema,
+} from "@/lib/types";
 
 export async function getProjects(ownerId: string): Promise<Project[]> {
   return repository.listProjects(ownerId);
@@ -11,6 +16,19 @@ export async function getProjects(ownerId: string): Promise<Project[]> {
 
 export async function findProject(id: string): Promise<Project | null> {
   return repository.findProjectById(id);
+}
+
+export async function findProjectByOwnerAndKey(
+  ownerId: string,
+  uploadthingKey: string,
+): Promise<Project | null> {
+  return repository.findProjectByOwnerAndKey(ownerId, uploadthingKey);
+}
+
+export async function findCanonicalByUploadthingKey(
+  uploadthingKey: string,
+) {
+  return repository.findCanonicalByUploadthingKey(uploadthingKey);
 }
 
 /** Analysis is immutable after upload — cache across requests to avoid repeat DB reads. */
@@ -24,9 +42,14 @@ export function findProjectWithAnalysis(id: string) {
 
 export async function saveProjectWithAnalysis(
   project: Project,
-  analysis: VideoAnalysis,
+  analysisSchema: VideoAnalysisSchema,
+  projections: StimProjectionPoint[],
 ): Promise<Project> {
-  return repository.insertProjectWithAnalysis(project, analysis);
+  return repository.insertProjectWithAnalysis(
+    project,
+    analysisSchema,
+    projections,
+  );
 }
 
 export async function getProjectAnalysis(

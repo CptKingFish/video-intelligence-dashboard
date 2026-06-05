@@ -11,6 +11,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:setup-timescale": "node scripts/setup-timescale.mjs",
+    "db:seed": "node scripts/seed-videos.mjs",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
@@ -23,6 +24,8 @@
     "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
@@ -39,6 +42,7 @@
     "server-only": "^0.0.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.6.0",
+    "three": "^0.184.0",
     "uuid": "^14.0.0",
     "zod": "^4.4.3"
   },
@@ -48,6 +52,7 @@
     "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "^0.184.1",
     "@types/uuid": "^10.0.0",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",

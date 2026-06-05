@@ -15,7 +15,7 @@ export interface CurrentUser {
 const DEMO_USER: CurrentUser = {
   id: DEMO_OWNER_ID,
   name: "Demo User",
-  email: "demo@videointel.app",
+  email: "demo@intelliral.app",
   imageUrl: null,
   isDemo: true,
 };

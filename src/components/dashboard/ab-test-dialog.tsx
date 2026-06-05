@@ -4,6 +4,7 @@ import * as React from "react";
 import { FlaskConical, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { ActionCtaButton } from "@/components/dashboard/action-cta-button";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -87,17 +88,20 @@ export function AbTestDialog({ trigger }: { trigger?: React.ReactNode }) {
     >
       <DialogTrigger asChild>
         {trigger ?? (
-          <Button variant="outline">
-            <FlaskConical />
-            Neural A/B test
-          </Button>
+          <ActionCtaButton
+            variant="abtest"
+            icon={<FlaskConical className="size-4" />}
+            label="Neural A/B test"
+            hint="Compare 2–3 edits before you post"
+          />
         )}
       </DialogTrigger>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Neural A/B testing</DialogTitle>
+          <DialogTitle>Intelliral neural A/B test</DialogTitle>
           <DialogDescription>
-            Compare 2–3 TikTok edits before you publish. Pick versions below.
+            Compare 2–3 TikTok edits before you publish. Intelliral predicts
+            which version wins.
           </DialogDescription>
         </DialogHeader>
 

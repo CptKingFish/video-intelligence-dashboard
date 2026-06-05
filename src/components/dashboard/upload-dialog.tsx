@@ -2,9 +2,11 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Check, Loader2, Sparkles } from "lucide-react";
+import { Loader2, Zap } from "lucide-react";
 import { toast } from "sonner";
 
+import { ActionCtaButton } from "@/components/dashboard/action-cta-button";
+import { SamplePickerCard } from "@/components/dashboard/sample-picker-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -16,10 +18,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+import { captureFirstFrameFromUrl } from "@/lib/video/capture-frame";
 import type { ApiResponse, Project, VideoAnalysis, VideoSample } from "@/lib/types";
 
-type Phase = "idle" | "processing";
+type Phase = "idle" | "capturing" | "processing";
 
 export function UploadDialog({
   trigger,
@@ -61,20 +63,24 @@ export function UploadDialog({
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (!selectedId || busy) return;
+    if (!selected || busy) return;
 
     try {
+      setPhase("capturing");
+      setProgress(15);
+
+      const captured = await captureFirstFrameFromUrl(selected.videoUrl);
+      setProgress(35);
+
       setPhase("processing");
-      setProgress(30);
 
       const response = await fetch("/api/videos/process", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          sampleId: selectedId,
-          title: title.trim() || selected?.title,
-          durationSeconds: selected?.durationSeconds ?? 15,
-          fileSizeBytes: 0,
+          sampleId: selected.id,
+          title: title.trim() || selected.title,
+          thumbnailUrl: captured.thumbnailUrl,
         }),
       });
       setProgress(85);
@@ -86,7 +92,7 @@ export function UploadDialog({
       }
 
       setProgress(100);
-      toast.success("Simulation ready — opening analysis.");
+      toast.success("Intelliral simulation ready — opening analysis.");
       setOpen(false);
       router.push(`/dashboard/videos/${result.data.project.id}`);
     } catch (error) {
@@ -109,49 +115,44 @@ export function UploadDialog({
     >
       <DialogTrigger asChild>
         {trigger ?? (
-          <Button>
-            <Sparkles />
-            Simulate a TikTok
-          </Button>
+          <ActionCtaButton
+            variant="simulate"
+            icon={<Zap className="size-4" />}
+            label="Simulate a TikTok"
+            hint="Run neural brain analysis"
+          />
         )}
       </DialogTrigger>
 
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl gap-5">
         <DialogHeader>
-          <DialogTitle>Choose a demo TikTok</DialogTitle>
+          <DialogTitle>Simulate a TikTok with Intelliral</DialogTitle>
           <DialogDescription>
-            Pick one of five curated clips (~10–20s) hosted on UploadThing. Custom
-            uploads are disabled for the hackathon demo.
+            Pick a curated vertical clip. Intelliral captures a real frame and
+            runs TRIBE brain analysis before you post.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="flex flex-col gap-4">
-          <div className="grid max-h-64 grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2">
-            {samples.map((sample) => {
-              const active = sample.id === selectedId;
-              return (
-                <button
-                  key={sample.id}
-                  type="button"
-                  disabled={busy}
-                  onClick={() => onPick(sample)}
-                  className={cn(
-                    "relative rounded-lg border p-3 text-left text-sm transition-colors",
-                    active
-                      ? "border-primary bg-primary/10"
-                      : "hover:border-primary/40",
-                  )}
-                >
-                  {active && (
-                    <Check className="absolute right-2 top-2 size-4 text-primary" />
-                  )}
-                  <p className="pr-6 font-medium">{sample.title}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {sample.description}
-                  </p>
-                </button>
-              );
-            })}
+        <form onSubmit={onSubmit} className="flex flex-col gap-5">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {samples.length === 0
+              ? Array.from({ length: 3 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex aspect-[9/16] items-center justify-center rounded-xl border bg-muted"
+                  >
+                    <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                  </div>
+                ))
+              : samples.map((sample) => (
+                  <SamplePickerCard
+                    key={sample.id}
+                    sample={sample}
+                    active={sample.id === selectedId}
+                    disabled={busy}
+                    onSelect={() => onPick(sample)}
+                  />
+                ))}
           </div>
 
           {selected && (
@@ -174,7 +175,9 @@ export function UploadDialog({
               <Progress value={progress} />
               <p className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Loader2 className="size-3.5 animate-spin" />
-                Encoding TRIBE embedding & running viral simulator…
+                {phase === "capturing"
+                  ? "Capturing TikTok thumbnail…"
+                  : "Encoding TRIBE embedding & running viral simulator…"}
               </p>
             </div>
           )}

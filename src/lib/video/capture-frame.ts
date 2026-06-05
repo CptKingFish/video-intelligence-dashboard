@@ -20,6 +20,61 @@ const FALLBACK_THUMB =
     '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360"><rect width="640" height="360" fill="#1e1b4b"/></svg>',
   );
 
+/** True when the stored thumbnail is a gradient/placeholder, not a real frame. */
+export function isPlaceholderThumbnail(url: string): boolean {
+  return (
+    url.startsWith("data:image/svg") ||
+    /\.(mp4|webm|mov)(\?|$)/i.test(url) ||
+    url.includes(".ufs.sh/f/")
+  );
+}
+
+export function captureFirstFrameFromUrl(videoUrl: string): Promise<CapturedFrame> {
+  return new Promise((resolve) => {
+    const video = document.createElement("video");
+    video.preload = "auto";
+    video.muted = true;
+    video.playsInline = true;
+    video.crossOrigin = "anonymous";
+
+    let settled = false;
+    const finish = (thumbnailUrl: string, durationSeconds: number) => {
+      if (settled) return;
+      settled = true;
+      resolve({ thumbnailUrl, durationSeconds, videoUrl });
+    };
+
+    const draw = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth || 720;
+        canvas.height = video.videoHeight || 1280;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return finish(FALLBACK_THUMB, video.duration || 0);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        finish(canvas.toDataURL("image/jpeg", 0.82), video.duration || 0);
+      } catch {
+        finish(FALLBACK_THUMB, video.duration || 0);
+      }
+    };
+
+    video.addEventListener("loadedmetadata", () => {
+      const target = Number.isFinite(video.duration)
+        ? Math.min(0.15, video.duration / 2)
+        : 0.15;
+      video.currentTime = target;
+    });
+    video.addEventListener("seeked", draw, { once: true });
+    video.addEventListener("error", () =>
+      finish(FALLBACK_THUMB, video.duration || 0),
+    );
+
+    setTimeout(() => finish(FALLBACK_THUMB, video.duration || 0), 8000);
+
+    video.src = videoUrl;
+  });
+}
+
 export function captureFirstFrame(file: File): Promise<CapturedFrame> {
   return new Promise((resolve) => {
     const videoUrl = URL.createObjectURL(file);

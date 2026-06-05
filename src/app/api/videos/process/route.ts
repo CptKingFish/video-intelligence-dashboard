@@ -2,37 +2,32 @@ import { NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 
-import { buildVideoInsights } from "@/lib/analysis/insights";
-import { generateAnalysis } from "@/lib/analysis/generate";
 import { getCurrentUser } from "@/lib/auth";
-import { embeddingServiceUrl, isNeonEnabled } from "@/lib/env";
-import { saveProjectWithAnalysis } from "@/lib/projects";
+import { isNeonEnabled } from "@/lib/env";
+import {
+  findCanonicalByUploadthingKey,
+  findProjectByOwnerAndKey,
+  findProjectWithAnalysis,
+  saveProjectWithAnalysis,
+} from "@/lib/projects";
 import { gradientThumbnail } from "@/lib/thumbnails";
 import { getVideoSample } from "@/lib/videos/samples";
-import type { ApiResponse, Project, VideoAnalysis } from "@/lib/types";
+import type { ApiResponse, Project } from "@/lib/types";
 
 export const runtime = "nodejs";
 
 /**
  * POST /api/videos/process
  *
- * Accepts video metadata (captured client-side), runs analysis, persists to
- * Neon (+ Timescale for timeline when configured), and returns project + analysis.
+ * Accepts a curated sample id, clones seeded TRIBE analysis for the user,
+ * and persists to Neon (+ Timescale for projections when configured).
  */
-const requestSchema = z
-  .object({
-    sampleId: z.string().trim().min(1).max(64).optional(),
-    title: z.string().trim().min(1).max(120).optional(),
-    durationSeconds: z.number().int().nonnegative().max(60 * 60 * 6).default(0),
-    fileSizeBytes: z.number().int().nonnegative().default(0),
-    thumbnailUrl: z.string().min(1).optional(),
-    videoUrl: z.string().optional(),
-    embeddingDim: z.number().int().min(8).max(4096).default(512),
-  })
-  .refine((data) => !!data.sampleId || !!data.title, {
-    message: "Provide sampleId or title.",
-    path: ["sampleId"],
-  });
+const requestSchema = z.object({
+  sampleId: z.string().trim().min(1).max(64),
+  title: z.string().trim().min(1).max(120).optional(),
+  durationSeconds: z.number().int().nonnegative().max(60 * 60 * 6).default(0),
+  thumbnailUrl: z.string().min(1).optional(),
+});
 
 export async function POST(request: Request): Promise<NextResponse> {
   if (!isNeonEnabled) {
@@ -66,40 +61,54 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   const user = await getCurrentUser();
   const input = parsed.data;
-  const sample = input.sampleId ? getVideoSample(input.sampleId) : undefined;
+  const sample = getVideoSample(input.sampleId);
 
-  if (input.sampleId && !sample) {
+  if (!sample) {
     return json({ success: false, error: "Unknown sample id." }, 422);
   }
 
+  const { uploadthingKey } = sample;
+
+  const existing = await findProjectByOwnerAndKey(user.id, uploadthingKey);
+  if (existing) {
+    const loaded = await findProjectWithAnalysis(existing.id);
+    if (loaded) {
+      return json({ success: true, data: loaded }, 200);
+    }
+  }
+
+  const canonical = await findCanonicalByUploadthingKey(uploadthingKey);
+  if (!canonical) {
+    return json(
+      {
+        success: false,
+        error:
+          "Seeded analysis not found for this video. Run pnpm db:seed after migrating.",
+      },
+      503,
+    );
+  }
+
   const id = uuidv4();
-  const title = sample?.title ?? input.title!.trim();
-  const durationSeed = sample?.durationSeconds ?? input.durationSeconds;
-
-  const analysis: VideoAnalysis = embeddingServiceUrl
-    ? await fetchExternalAnalysis(id, { ...input, durationSeconds: durationSeed })
-    : generateAnalysis(id, {
-        durationSeconds: durationSeed || undefined,
-        embeddingDim: input.embeddingDim,
-      });
-
+  const title = input.title?.trim() || sample.title;
   const project: Project = {
     id,
+    uploadthingKey,
     ownerId: user.id,
     title,
-    thumbnailUrl:
-      input.thumbnailUrl || gradientThumbnail(id, title),
-    videoUrl: sample?.videoUrl ?? input.videoUrl ?? null,
+    thumbnailUrl: input.thumbnailUrl || gradientThumbnail(id, title),
+    videoUrl: sample.videoUrl,
     status: "ready",
-    durationSeconds: analysis.durationSeconds,
-    fileSizeBytes: input.fileSizeBytes,
-    embeddingDim: analysis.embeddingDim,
-    sampleId: sample?.id ?? null,
+    durationSeconds: canonical.project.durationSeconds,
     createdAt: new Date().toISOString(),
   };
 
   try {
-    await saveProjectWithAnalysis(project, analysis);
+    await saveProjectWithAnalysis(
+      project,
+      canonical.analysis,
+      canonical.projections,
+    );
   } catch (error) {
     console.error("[videos/process] failed to persist project", error);
     return json(
@@ -112,33 +121,15 @@ export async function POST(request: Request): Promise<NextResponse> {
     );
   }
 
-  return json({ success: true, data: { project, analysis } }, 201);
-}
-
-async function fetchExternalAnalysis(
-  projectId: string,
-  input: z.infer<typeof requestSchema>,
-): Promise<VideoAnalysis> {
-  const response = await fetch(embeddingServiceUrl!, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      projectId,
-      durationSeconds: input.durationSeconds,
-      embeddingDim: input.embeddingDim,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Embedding service returned ${response.status}`);
+  const loaded = await findProjectWithAnalysis(id);
+  if (!loaded) {
+    return json(
+      { success: false, error: "Project saved but analysis could not be loaded." },
+      500,
+    );
   }
 
-  const raw = (await response.json()) as VideoAnalysis;
-  if (raw.insights) return raw;
-  return {
-    ...raw,
-    insights: buildVideoInsights(raw.timeline, raw.durationSeconds),
-  };
+  return json({ success: true, data: loaded }, 201);
 }
 
 function json<T>(body: ApiResponse<T>, status: number): NextResponse {

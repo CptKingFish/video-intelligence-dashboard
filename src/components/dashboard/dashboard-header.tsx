@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Zap } from "lucide-react";
 import dynamic from "next/dynamic";
 
+import { IntelliralLogo } from "@/components/brand/intelliral-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -30,17 +30,14 @@ export function DashboardHeader({
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-6">
-        <Link href="/dashboard" prefetch={false} className="flex items-center gap-2 font-semibold">
-          <span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
-            <Zap className="size-4" />
-          </span>
-          VideoIntel
-          {user.isDemo && (
-            <Badge variant="outline" className="ml-1">
-              Demo
-            </Badge>
-          )}
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6">
+        <Link
+          href="/dashboard"
+          prefetch={false}
+          className="flex items-center gap-2"
+        >
+          <IntelliralLogo size="sm" />
+          {user.isDemo && <Badge variant="outline">Demo</Badge>}
         </Link>
 
         <div className="flex items-center gap-2">

@@ -1,0 +1,91 @@
+{
+  "uploadthingKey": "tquDckWYIgn0R0nAoDOuI2a4UMfKQzvC6BLP7EbYrWiqckw1",
+  "id": "a1000001-0001-4001-8001-000000000001",
+  "title": "Stick Stories — Corporate Day",
+  "durationSeconds": 57,
+  "analysis": {
+    "stimulation_timeline": [
+      { "score": 74, "timestamp": "0:00" },
+      { "score": 86, "timestamp": "0:03" },
+      { "score": 82, "timestamp": "0:06" },
+      { "score": 80, "timestamp": "0:09" },
+      { "score": 83, "timestamp": "0:12" },
+      { "score": 88, "timestamp": "0:15" },
+      { "score": 70, "timestamp": "0:18" },
+      { "score": 81, "timestamp": "0:21" },
+      { "score": 87, "timestamp": "0:24" },
+      { "score": 78, "timestamp": "0:27" },
+      { "score": 89, "timestamp": "0:30" },
+      { "score": 80, "timestamp": "0:33" },
+      { "score": 68, "timestamp": "0:36" },
+      { "score": 81, "timestamp": "0:39" },
+      { "score": 82, "timestamp": "0:42" },
+      { "score": 85, "timestamp": "0:45" },
+      { "score": 92, "timestamp": "0:48" },
+      { "score": 76, "timestamp": "0:51" },
+      { "score": 90, "timestamp": "0:54" },
+      { "score": 58, "timestamp": "0:57" }
+    ],
+    "brain_response_score": 80,
+    "predicted_drop_off": ["0:00", "0:36", "0:57"],
+    "audience_segment": "Finance & consulting professionals, Big 4 alumni, corporate LinkedIn humour consumers — extremely high insider recognition rate (23–35)",
+    "mean_stimulation": 80,
+    "peak_stimulation": 92,
+    "highlights": 6,
+    "stimulating_moment": {
+      "event": "Tired character at laptop — 'You tell yourself the tab is almost tied out' / 'The tab is not almost tied out' — two-beat self-aware accounting joke with the highest insider specificity and deadpan delivery in the video",
+      "timestamp": "0:48"
+    },
+    "suggested_edits": [
+      {
+        "title": "Slow Branded Open",
+        "time": "0:00",
+        "suggestions": [
+          "Cut the exterior building shot and open directly at 0:03 with the 5:45am Peloton — that's the first real laugh and it lands immediately",
+          "Add a 1-frame text flash of the title over the Peloton scene instead of the static building reveal"
+        ],
+        "alternatives": "Open with the 0:48 peak joke ('The tab is not almost tied out') as a 1s teaser, then cut to 0:03 — loop anchor that rewards completion for anyone who recognises the setup"
+      },
+      {
+        "title": "Dip at 0:18 and 0:36",
+        "time": "0:18",
+        "suggestions": [
+          "0:18: The 8am desk scene is a visual reset with no new joke — cut it and let the 'circle back' line play over the subway or subway exit scene instead",
+          "0:36: 'You eat at your desk' is the weakest standalone line — pair it with a visual detail (sad salad emoji above character, phone with Outlook notification) to add a second joke layer"
+        ],
+        "alternatives": "Restructure to alternate high and medium beats more tightly — the current two-dip pattern at 0:18 and 0:36 risks losing viewers before the strongest second half"
+      },
+      {
+        "title": "Hard CTA Drop at 0:57",
+        "time": "0:57",
+        "suggestions": [
+          "Replace 'Follow Stick Stories for more' text with an in-character line: 'You follow. It's on your to-do list. You will circle back to actually watching.' — keeps the voice alive through the CTA",
+          "End on the 0:54 'circling back' frame as the last visual — the walking shot with briefcase is the best visual closer; the static text outro wastes it"
+        ],
+        "alternatives": "Add a post-CTA bonus beat (3s) with one final absurd detail, e.g. the character getting a Slack notification at midnight — gives early-departing viewers a reason to rewatch for the hidden ending"
+      }
+    ]
+  },
+  "projections": [
+    { "timestep": 1, "timeSec": 0.0, "stimProjection": 1.4931, "cosineToStim": 0.8876 },
+    { "timestep": 2, "timeSec": 3.0, "stimProjection": 2.046, "cosineToStim": 0.9491 },
+    { "timestep": 3, "timeSec": 6.0, "stimProjection": 1.9325, "cosineToStim": 0.9617 },
+    { "timestep": 4, "timeSec": 9.0, "stimProjection": 1.8446, "cosineToStim": 0.9931 },
+    { "timestep": 5, "timeSec": 12.0, "stimProjection": 1.928, "cosineToStim": 0.9429 },
+    { "timestep": 6, "timeSec": 15.0, "stimProjection": 2.1377, "cosineToStim": 0.9501 },
+    { "timestep": 7, "timeSec": 18.0, "stimProjection": 1.7136, "cosineToStim": 0.9573 },
+    { "timestep": 8, "timeSec": 21.0, "stimProjection": 1.8438, "cosineToStim": 0.996 },
+    { "timestep": 9, "timeSec": 24.0, "stimProjection": 2.1605, "cosineToStim": 0.9721 },
+    { "timestep": 10, "timeSec": 27.0, "stimProjection": 1.9012, "cosineToStim": 0.9504 },
+    { "timestep": 11, "timeSec": 30.0, "stimProjection": 2.2617, "cosineToStim": 0.9775 },
+    { "timestep": 12, "timeSec": 33.0, "stimProjection": 1.9407, "cosineToStim": 0.9593 },
+    { "timestep": 13, "timeSec": 36.0, "stimProjection": 1.6277, "cosineToStim": 0.9965 },
+    { "timestep": 14, "timeSec": 39.0, "stimProjection": 1.9423, "cosineToStim": 0.9492 },
+    { "timestep": 15, "timeSec": 42.0, "stimProjection": 1.8265, "cosineToStim": 0.9966 },
+    { "timestep": 16, "timeSec": 45.0, "stimProjection": 2.0594, "cosineToStim": 0.9808 },
+    { "timestep": 17, "timeSec": 48.0, "stimProjection": 2.0916, "cosineToStim": 1.0 },
+    { "timestep": 18, "timeSec": 51.0, "stimProjection": 1.851, "cosineToStim": 0.9234 },
+    { "timestep": 19, "timeSec": 54.0, "stimProjection": 2.1481, "cosineToStim": 0.964 },
+    { "timestep": 20, "timeSec": 57.0, "stimProjection": 1.4822, "cosineToStim": 0.966 }
+  ]
+}

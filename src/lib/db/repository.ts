@@ -1,6 +1,6 @@
 import "server-only";
 
-import { asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 
 import {
   getNeonDb,
@@ -10,12 +10,18 @@ import {
 import {
   parseStoredAnalysis,
   rowToProject,
-  rowToTimelinePoint,
+  rowToStimProjection,
 } from "@/lib/db/mappers";
-import { projects, timelinePoints } from "@/lib/db/schema";
-import type { Project, VideoAnalysis } from "@/lib/types";
+import { projects, stimProjections } from "@/lib/db/schema";
+import { withDbRetry } from "@/lib/db/retry";
+import type {
+  Project,
+  StimProjectionPoint,
+  VideoAnalysis,
+  VideoAnalysisSchema,
+} from "@/lib/types";
 
-const TIMELINE_BATCH_SIZE = 500;
+const PROJECTION_BATCH_SIZE = 500;
 
 async function requireNeonDb() {
   const db = await getNeonDb();
@@ -27,8 +33,8 @@ async function requireNeonDb() {
   return db;
 }
 
-/** Timeline rows live in Timescale when configured and reachable, otherwise Neon. */
-async function getTimelineDb() {
+/** Projection rows live in Timescale when configured and reachable, otherwise Neon. */
+async function getProjectionDb() {
   if (await isTimescaleReachable()) {
     const timescale = await getTimescaleDb();
     if (timescale) return timescale;
@@ -38,11 +44,13 @@ async function getTimelineDb() {
 
 export async function listProjects(ownerId: string): Promise<Project[]> {
   const db = await requireNeonDb();
-  const rows = await db
-    .select()
-    .from(projects)
-    .where(eq(projects.ownerId, ownerId))
-    .orderBy(desc(projects.createdAt));
+  const rows = await withDbRetry(() =>
+    db
+      .select()
+      .from(projects)
+      .where(eq(projects.ownerId, ownerId))
+      .orderBy(desc(projects.createdAt)),
+  );
 
   return rows.map(rowToProject);
 }
@@ -58,45 +66,108 @@ export async function findProjectById(id: string): Promise<Project | null> {
   return row ? rowToProject(row) : null;
 }
 
+export async function findProjectByUploadthingKey(
+  uploadthingKey: string,
+): Promise<Project | null> {
+  const db = await requireNeonDb();
+  const [row] = await db
+    .select()
+    .from(projects)
+    .where(eq(projects.uploadthingKey, uploadthingKey))
+    .limit(1);
+
+  return row ? rowToProject(row) : null;
+}
+
+export async function findProjectByOwnerAndKey(
+  ownerId: string,
+  uploadthingKey: string,
+): Promise<Project | null> {
+  const db = await requireNeonDb();
+  const [row] = await db
+    .select()
+    .from(projects)
+    .where(
+      and(
+        eq(projects.ownerId, ownerId),
+        eq(projects.uploadthingKey, uploadthingKey),
+      ),
+    )
+    .limit(1);
+
+  return row ? rowToProject(row) : null;
+}
+
+export async function findCanonicalByUploadthingKey(
+  uploadthingKey: string,
+): Promise<{
+  project: Project;
+  analysis: VideoAnalysisSchema;
+  projections: StimProjectionPoint[];
+} | null> {
+  const db = await requireNeonDb();
+  const projectionDb = await getProjectionDb();
+
+  const [row] = await db
+    .select()
+    .from(projects)
+    .where(
+      and(
+        eq(projects.uploadthingKey, uploadthingKey),
+        eq(projects.ownerId, "seed"),
+      ),
+    )
+    .limit(1);
+
+  if (!row) return null;
+
+  const projectionRows = await projectionDb
+    .select()
+    .from(stimProjections)
+    .where(eq(stimProjections.projectId, row.id))
+    .orderBy(asc(stimProjections.timestep));
+
+  return {
+    project: rowToProject(row),
+    analysis: row.analysis as VideoAnalysisSchema,
+    projections: projectionRows.map(rowToStimProjection),
+  };
+}
+
 export async function insertProjectWithAnalysis(
   project: Project,
-  analysis: VideoAnalysis,
+  analysisSchema: VideoAnalysisSchema,
+  projections: StimProjectionPoint[],
 ): Promise<Project> {
   const db = await requireNeonDb();
-  const timelineDb = await getTimelineDb();
+  const projectionDb = await getProjectionDb();
 
   await db.insert(projects).values({
     id: project.id,
+    uploadthingKey: project.uploadthingKey,
     ownerId: project.ownerId,
     title: project.title,
     thumbnailUrl: project.thumbnailUrl,
     videoUrl: project.videoUrl,
     status: project.status,
     durationSeconds: project.durationSeconds,
-    fileSizeBytes: project.fileSizeBytes,
-    embeddingDim: project.embeddingDim,
-    embedding: JSON.stringify(analysis.embedding),
-    highlights: JSON.stringify(analysis.highlights),
-    stats: JSON.stringify(analysis.stats),
-    insights: JSON.stringify(analysis.insights),
-    sampleId: project.sampleId ?? null,
+    analysis: analysisSchema,
     createdAt: new Date(project.createdAt),
   });
 
-  const timelineRows = analysis.timeline.map((point) => ({
+  const projectionRows = projections.map((point) => ({
     projectId: project.id,
-    t: point.t,
-    score: point.score,
-    energy: point.energy,
-    motion: point.motion,
-    recordedAt: Date.now() / 1000,
+    timestep: point.timestep,
+    timeSec: point.timeSec,
+    stimProjection: point.stimProjection,
+    cosineToStim: point.cosineToStim,
   }));
 
   try {
-    for (let i = 0; i < timelineRows.length; i += TIMELINE_BATCH_SIZE) {
-      await timelineDb
-        .insert(timelinePoints)
-        .values(timelineRows.slice(i, i + TIMELINE_BATCH_SIZE));
+    for (let i = 0; i < projectionRows.length; i += PROJECTION_BATCH_SIZE) {
+      await projectionDb
+        .insert(stimProjections)
+        .values(projectionRows.slice(i, i + PROJECTION_BATCH_SIZE));
     }
   } catch (error) {
     await db.delete(projects).where(eq(projects.id, project.id));
@@ -110,7 +181,7 @@ export async function findProjectWithAnalysis(
   id: string,
 ): Promise<{ project: Project; analysis: VideoAnalysis } | null> {
   const db = await requireNeonDb();
-  const timelineDb = await getTimelineDb();
+  const projectionDb = await getProjectionDb();
 
   const [row] = await db
     .select()
@@ -122,14 +193,14 @@ export async function findProjectWithAnalysis(
 
   const project = rowToProject(row);
 
-  const timelineRows = await timelineDb
+  const projectionRows = await projectionDb
     .select()
-    .from(timelinePoints)
-    .where(eq(timelinePoints.projectId, id))
-    .orderBy(asc(timelinePoints.t));
+    .from(stimProjections)
+    .where(eq(stimProjections.projectId, id))
+    .orderBy(asc(stimProjections.timestep));
 
-  const timeline = timelineRows.map(rowToTimelinePoint);
-  const analysis = parseStoredAnalysis(project, row, timeline);
+  const projections = projectionRows.map(rowToStimProjection);
+  const analysis = parseStoredAnalysis(project, row, projections);
   if (!analysis) return null;
 
   return { project, analysis };
@@ -140,4 +211,24 @@ export async function loadProjectAnalysis(
 ): Promise<VideoAnalysis | null> {
   const result = await findProjectWithAnalysis(project.id);
   return result?.analysis ?? null;
+}
+
+export async function deleteProjectByUploadthingKey(
+  uploadthingKey: string,
+): Promise<void> {
+  const db = await requireNeonDb();
+  const projectionDb = await getProjectionDb();
+
+  const [row] = await db
+    .select({ id: projects.id })
+    .from(projects)
+    .where(eq(projects.uploadthingKey, uploadthingKey))
+    .limit(1);
+
+  if (!row) return;
+
+  await projectionDb
+    .delete(stimProjections)
+    .where(eq(stimProjections.projectId, row.id));
+  await db.delete(projects).where(eq(projects.id, row.id));
 }

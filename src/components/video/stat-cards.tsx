@@ -1,7 +1,6 @@
 import { Activity, Flame, Gauge, Layers } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
-import { formatBytes } from "@/lib/utils";
 import type { Project, VideoAnalysis } from "@/lib/types";
 
 const pct = (value: number): string => `${Math.round(value * 100)}%`;
@@ -54,8 +53,15 @@ export function StatCards({
         ))}
       </div>
       <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-        <Meta label="Embedding" value={`${analysis.embeddingDim} dims`} />
-        <Meta label="File size" value={formatBytes(project.fileSizeBytes)} />
+        <Meta label="Duration" value={`${Math.round(project.durationSeconds)}s`} />
+        {analysis.embeddingDim ? (
+          <Meta label="Embedding" value={`${analysis.embeddingDim} dims`} />
+        ) : (
+          <Meta
+            label="Brain score"
+            value={`${analysis.brainScan?.brainResponseScore ?? brain}/100`}
+          />
+        )}
       </dl>
     </Card>
   );

@@ -36,7 +36,7 @@ export async function isTimescaleReachable(): Promise<boolean> {
     globalForDb.__timescaleReachable = true;
   } catch (error) {
     console.warn(
-      "[db] TimescaleDB unreachable; falling back to Neon for timeline_points.",
+      "[db] TimescaleDB unreachable; falling back to Neon for stim_projections.",
       error instanceof Error ? error.message : error,
     );
     globalForDb.__timescaleReachable = false;
@@ -51,8 +51,10 @@ export async function getNeonDb(): Promise<NeonHttpDatabase<
   if (!isNeonEnabled) return null;
   if (globalForDb.__neonDb) return globalForDb.__neonDb;
 
-  const { neon } = await import("@neondatabase/serverless");
+  const { neon, neonConfig } = await import("@neondatabase/serverless");
   const { drizzle } = await import("drizzle-orm/neon-http");
+  // Reuse HTTP connections across requests (helps with Neon cold starts).
+  neonConfig.fetchConnectionCache = true;
   const sql = neon(process.env.DATABASE_URL!);
   globalForDb.__neonDb = drizzle(sql, { schema });
   return globalForDb.__neonDb;

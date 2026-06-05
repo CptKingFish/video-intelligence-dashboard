@@ -1,4 +1,6 @@
-import { Brain, Sparkles } from "lucide-react";
+"use client";
+
+import { Brain, Sparkles, Users } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import {
@@ -7,7 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { ViralSimulator } from "@/lib/types";
+import { formatTimestamp } from "@/lib/utils";
+import type { BrainScan, ViralSimulator } from "@/lib/types";
 
 const RESPONSE_LABEL = {
   low: "Low response",
@@ -25,7 +28,15 @@ function StarRow({ stars }: { stars: number }) {
   );
 }
 
-export function ViralSimulatorCard({ simulator }: { simulator: ViralSimulator }) {
+export function ViralSimulatorCard({
+  simulator,
+  brainScan,
+  onSeek,
+}: {
+  simulator: ViralSimulator;
+  brainScan?: BrainScan;
+  onSeek?: (t: number) => void;
+}) {
   return (
     <Card>
       <CardHeader>
@@ -43,7 +54,7 @@ export function ViralSimulatorCard({ simulator }: { simulator: ViralSimulator })
           <div>
             <p className="text-xs text-muted-foreground">Brain Response Score</p>
             <p className="text-2xl font-bold tabular-nums">
-              {simulator.brainResponseScore}
+              {brainScan?.brainResponseScore ?? simulator.brainResponseScore}
               <span className="text-base font-normal text-muted-foreground">
                 /100
               </span>
@@ -82,6 +93,26 @@ export function ViralSimulatorCard({ simulator }: { simulator: ViralSimulator })
           </ul>
         </div>
 
+        {brainScan && brainScan.predictedDropOff.length > 0 && (
+          <div>
+            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Predicted drop-off moments
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {brainScan.predictedDropOff.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => onSeek?.(t)}
+                  className="rounded-md border px-2.5 py-1 font-mono text-xs text-rose-400 transition-colors hover:bg-accent/40"
+                >
+                  {formatTimestamp(t)}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div>
           <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Audience segments
@@ -97,6 +128,17 @@ export function ViralSimulatorCard({ simulator }: { simulator: ViralSimulator })
               </li>
             ))}
           </ul>
+          {brainScan?.audienceSegment && (
+            <div className="mt-3 flex items-start gap-2 rounded-lg border bg-primary/5 p-3">
+              <Users className="mt-0.5 size-4 shrink-0 text-primary" />
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                <span className="font-medium text-foreground">
+                  Best-fit audience:{" "}
+                </span>
+                {brainScan.audienceSegment}
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </Card>

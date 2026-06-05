@@ -68,6 +68,12 @@ export function EditCopilotCard({
                 <span className="italic">&ldquo;{segment.alternativeHook}&rdquo;</span>
               </p>
             )}
+            {segment.alternatives && (
+              <p className="text-xs leading-relaxed">
+                <span className="text-muted-foreground">Alternative: </span>
+                <span className="italic">{segment.alternatives}</span>
+              </p>
+            )}
             {segment.suggestedBroll && segment.suggestedBroll.length > 0 && (
               <p className="mt-2 text-xs text-muted-foreground">
                 Suggested B-roll: {segment.suggestedBroll.join(" · ")}

@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { abTestScore, buildVideoInsights } from "@/lib/analysis/insights";
-import { generateAnalysis } from "@/lib/analysis/generate";
+import { findCanonicalByUploadthingKey } from "@/lib/projects";
 import type { AbTestResult, ApiResponse } from "@/lib/types";
 import { getVideoSample, isValidSampleId } from "@/lib/videos/samples";
 
@@ -15,8 +14,7 @@ const requestSchema = z.object({
 /**
  * POST /api/videos/ab-test
  *
- * Compares 2–3 curated samples with deterministic TRIBE-style heuristics
- * (no publish required).
+ * Compares 2–3 curated samples using seeded TRIBE brain response scores.
  */
 export async function POST(request: Request): Promise<NextResponse> {
   let payload: unknown;
@@ -42,25 +40,21 @@ export async function POST(request: Request): Promise<NextResponse> {
     return json({ success: false, error: "Unknown sample id in list." }, 422);
   }
 
-  const candidates = uniqueIds.map((sampleId) => {
-    const sample = getVideoSample(sampleId)!;
-    const analysis = generateAnalysis(`ab-${sampleId}`, {
-      durationSeconds: sample.durationSeconds,
-    });
-    const score = abTestScore(analysis.timeline, analysis.durationSeconds);
-    const insights = buildVideoInsights(
-      analysis.timeline,
-      analysis.durationSeconds,
-    );
-    return {
-      sampleId,
-      title: sample.title,
-      score,
-      hookScore: insights.viralSimulator.signals.hookScore,
-      peakAttention: analysis.stats.peakScore,
-      dropOffLate: insights.viralSimulator.dropOff[2]?.dropOffPercent ?? 0,
-    };
-  });
+  const candidates = await Promise.all(
+    uniqueIds.map(async (sampleId) => {
+      const sample = getVideoSample(sampleId)!;
+      const canonical = await findCanonicalByUploadthingKey(sample.uploadthingKey);
+      const score = canonical?.analysis.brain_response_score ?? 0;
+
+      return {
+        sampleId,
+        title: sample.title,
+        score,
+        peakStimulation: canonical?.analysis.peak_stimulation ?? 0,
+        meanStimulation: canonical?.analysis.mean_stimulation ?? 0,
+      };
+    }),
+  );
 
   candidates.sort((a, b) => b.score - a.score);
   const winner = candidates[0];
@@ -69,9 +63,9 @@ export async function POST(request: Request): Promise<NextResponse> {
   const confidencePercent = Math.min(97, Math.max(62, 70 + margin));
 
   const reasons: string[] = [];
-  if (winner.hookScore >= 0.7) reasons.push("Strongest opening hook.");
-  if (winner.peakAttention >= 0.65) reasons.push("Highest peak attention.");
-  if (winner.dropOffLate <= 12) reasons.push("Lowest predicted drop-off.");
+  if (winner.meanStimulation >= 75) reasons.push("Strongest average stimulation.");
+  if (winner.peakStimulation >= 90) reasons.push("Highest peak stimulation.");
+  if (margin >= 5) reasons.push("Clear lead over runner-up.");
 
   const result: AbTestResult = {
     winnerSampleId: winner.sampleId,

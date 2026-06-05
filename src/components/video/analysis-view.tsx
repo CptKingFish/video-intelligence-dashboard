@@ -6,6 +6,7 @@ import { useThrottledValue } from "@/hooks/use-throttled-value";
 import type { Project, VideoAnalysis } from "@/lib/types";
 import { VideoPlayer } from "@/components/video/video-player";
 import { StatCards } from "@/components/video/stat-cards";
+import { BrainScanCard } from "@/components/video/brain-scan-card";
 import { StimulationChart } from "@/components/video/stimulation-chart";
 import { SignalsChart } from "@/components/video/signals-chart";
 import { EmbeddingFingerprint } from "@/components/video/embedding-fingerprint";
@@ -58,6 +59,14 @@ export function AnalysisView({
           onTimeUpdate={onTimeUpdate}
           onSeek={seekTo}
         />
+        {analysis.brainScan && (
+          <BrainScanCard
+            scan={analysis.brainScan}
+            currentTime={chartTime}
+            duration={analysis.durationSeconds}
+            onSeek={seekTo}
+          />
+        )}
         <StimulationChart
           timeline={analysis.timeline}
           highlights={analysis.highlights}
@@ -68,7 +77,11 @@ export function AnalysisView({
       </div>
 
       <div className="flex min-w-0 flex-col gap-6">
-        <ViralSimulatorCard simulator={analysis.insights.viralSimulator} />
+        <ViralSimulatorCard
+          simulator={analysis.insights.viralSimulator}
+          brainScan={analysis.brainScan}
+          onSeek={seekTo}
+        />
         <EditCopilotCard
           copilot={analysis.insights.editCopilot}
           onSeek={seekTo}
@@ -79,10 +92,12 @@ export function AnalysisView({
           currentTime={currentTime}
           onSeek={seekTo}
         />
-        <EmbeddingFingerprint
-          embedding={analysis.embedding}
-          dim={analysis.embeddingDim}
-        />
+        {analysis.embedding && analysis.embeddingDim ? (
+          <EmbeddingFingerprint
+            embedding={analysis.embedding}
+            dim={analysis.embeddingDim}
+          />
+        ) : null}
       </div>
     </div>
   );
